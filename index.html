@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Titip-titipin — Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f2;color:#1a1a1a;padding:24px}
@@ -145,6 +146,10 @@ tbody td{padding:5px 8px;color:var(--color-text-primary);overflow:hidden;text-ov
     <h1 style="font-size:16px;font-weight:500">Dashboard</h1>
   </div>
   <span id="date-lbl" style="font-size:12px;color:var(--color-text-secondary);background:var(--color-background-secondary);padding:4px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary)"></span>
+  <span id="sync-status" style="font-size:11px;color:var(--color-text-secondary);display:flex;align-items:center;gap:5px">
+    <span id="sync-dot" style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#888"></span>
+    <span id="sync-lbl">Menghubungkan...</span>
+  </span>
 </div>
 
 <div class="date-filter">
@@ -419,6 +424,7 @@ function getFiltered(){
 function inlineChange(id,field,val){
   const o=orders.find(x=>x.id===id);if(!o)return;
   o[field]=val;save();renderStats();
+  if(typeof pushToSupabase==='function'){setSyncStatus('syncing');pushToSupabase(o);}
 }
 
 function inlineSourceChange(id,sel){
@@ -502,10 +508,12 @@ function askDelete(id,label){
 function cancelDelete(){pendingDelId=null;document.getElementById('del-overlay').classList.remove('show');}
 function confirmDelete(){
   if(!pendingDelId)return;
-  orders=orders.filter(o=>o.id!==pendingDelId);
+  const idToDel=pendingDelId;
+  orders=orders.filter(o=>o.id!==idToDel);
   pendingDelId=null;
   document.getElementById('del-overlay').classList.remove('show');
-  save();renderStats();renderTable();buildYearOptions();
+  if(typeof deleteFromSupabase==='function'){setSyncStatus('syncing');deleteFromSupabase(idToDel);}else{save();}
+  renderStats();renderTable();buildYearOptions();
 }
 
 function toggleManualSrc(){
@@ -586,9 +594,12 @@ function saveOrder(){
     statusBrg:document.getElementById('f-sbrg').value,resi:document.getElementById('f-resi').value.trim(),
     tanggal:document.getElementById('f-tgl').value};
   if(!d.cust||!d.barang){alert('Nama customer dan barang wajib diisi.');return;}
-  if(editId){const i=orders.findIndex(o=>o.id===editId);orders[i]={...orders[i],...d};}
-  else{d.id=nextId++;orders.push(d);}
-  save();closeForm();renderStats();renderTable();buildYearOptions();
+  let saved;
+  if(editId){const i=orders.findIndex(o=>o.id===editId);orders[i]={...orders[i],...d};saved=orders[i];}
+  else{d.id=nextId++;orders.push(d);saved=d;}
+  save();
+  if(typeof pushToSupabase==='function'){setSyncStatus('syncing');pushToSupabase(saved);}
+  closeForm();renderStats();renderTable();buildYearOptions();
 }
 
 function chgBulananYear(d){
@@ -837,6 +848,7 @@ function showCustDetail(name,map){
 function custInlineChange(id,field,val,custName){
   const o=orders.find(x=>x.id===id);if(!o)return;
   o[field]=val;save();renderStats();
+  if(typeof pushToSupabase==='function'){setSyncStatus('syncing');pushToSupabase(o);}
   const map=buildCustMap();
   showCustDetail(custName,map);
   renderCustomers();
@@ -844,7 +856,9 @@ function custInlineChange(id,field,val,custName){
 function delFromCust(id,custName){
   if(!confirm('Hapus order ini?'))return;
   orders=orders.filter(o=>o.id!==id);
-  save();renderStats();renderTable();renderCustomers();buildYearOptions();
+  save();
+  if(typeof deleteFromSupabase==='function'){setSyncStatus('syncing');deleteFromSupabase(id);}
+  renderStats();renderTable();renderCustomers();buildYearOptions();
 }
 
 async function fetchKurs(){
@@ -875,8 +889,131 @@ function doConvert(){
   document.getElementById('conv-result').style.display='block';
 }
 
+// ── Supabase setup ──────────────────────────────────────────────
+const SUPA_URL = 'https://wnjklmhmdmgunikphowm.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InduamtsbWhtZG1ndW5pa3Bob3dtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0OTc5NjYsImV4cCI6MjA5MjA3Mzk2Nn0.rFwPvtCuE8gT2pPL6aRdT8jsq_-msNGIVnQlB0OXIVs';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+// Map JS object → Supabase row (camelCase → snake_case)
+function toRow(o){
+  return {
+    id: o.id,
+    source: o.source,
+    cust: o.cust,
+    barang: o.barang,
+    qty: o.qty||1,
+    won: o.won||'',
+    usd: o.usd||'',
+    rp: o.rp,
+    jual: o.jual,
+    profit: o.profit,
+    payment: o.payment,
+    toko: o.toko,
+    status_brg: o.statusBrg,
+    resi: o.resi||'',
+    tanggal: o.tanggal||null
+  };
+}
+
+// Map Supabase row → JS object
+function fromRow(r){
+  return {
+    id: Number(r.id),
+    source: r.source||'',
+    cust: r.cust||'',
+    barang: r.barang||'',
+    qty: r.qty||1,
+    won: r.won||'',
+    usd: r.usd||'',
+    rp: Number(r.rp)||0,
+    jual: Number(r.jual)||0,
+    profit: Number(r.profit)||0,
+    payment: r.payment||'BELUM BAYAR',
+    toko: r.toko||'',
+    statusBrg: r.status_brg||'PENDING',
+    resi: r.resi||'',
+    tanggal: r.tanggal||''
+  };
+}
+
+function setSyncStatus(state){
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-lbl');
+  if(state==='ok'){dot.style.background='#3B6D11';lbl.textContent='Tersinkron';}
+  else if(state==='syncing'){dot.style.background='#854F0B';lbl.textContent='Menyinkron...';}
+  else if(state==='error'){dot.style.background='#A32D2D';lbl.textContent='Offline (data lokal)';}
+  else{dot.style.background='#888';lbl.textContent='Menghubungkan...';}
+}
+
+// Pull all data from Supabase
+async function loadFromSupabase(){
+  setSyncStatus('syncing');
+  try{
+    const {data,error}=await sb.from('orders').select('*').order('id',{ascending:true});
+    if(error)throw error;
+    if(data && data.length>0){
+      orders=data.map(fromRow);
+      nextId=Math.max(...orders.map(o=>o.id))+1;
+      localStorage.setItem('jastip_v5',JSON.stringify(orders));
+    }
+    setSyncStatus('ok');
+  }catch(e){
+    console.error('Supabase load error:',e);
+    setSyncStatus('error');
+  }
+  buildYearOptions();renderStats();renderTable();
+}
+
+// Push single order upsert to Supabase
+async function pushToSupabase(o){
+  try{
+    const {error}=await sb.from('orders').upsert(toRow(o),{onConflict:'id'});
+    if(error)throw error;
+    setSyncStatus('ok');
+  }catch(e){
+    console.error('Supabase push error:',e);
+    setSyncStatus('error');
+  }
+}
+
+// Delete single order from Supabase
+async function deleteFromSupabase(id){
+  try{
+    const {error}=await sb.from('orders').delete().eq('id',id);
+    if(error)throw error;
+    setSyncStatus('ok');
+  }catch(e){
+    console.error('Supabase delete error:',e);
+    setSyncStatus('error');
+  }
+}
+
+// ── Override save() to also sync to Supabase ───────────────────
+function save(){
+  try{localStorage.setItem('jastip_v5',JSON.stringify(orders));}catch(e){}
+}
+
+// Save one order locally + push to Supabase
+function saveAndSync(o){
+  save();
+  setSyncStatus('syncing');
+  pushToSupabase(o);
+}
+
+// Delete locally + from Supabase
+function deleteAndSync(id){
+  save();
+  setSyncStatus('syncing');
+  deleteFromSupabase(id);
+}
+
+// ── Patch functions that write data ────────────────────────────
+// (inlineChange, confirmDelete, saveOrder, delFromCust, custInlineChange
+//  are already patched above to call pushToSupabase / deleteFromSupabase)
+
+// ── Init ────────────────────────────────────────────────────────
 buildYearOptions();renderStats();renderTable();fetchKurs();
+loadFromSupabase();
 </script>
 </body>
 </html>
-
