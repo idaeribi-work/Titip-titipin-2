@@ -57,24 +57,36 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f2;color:#1a
 .btn-sm{font-size:11px;padding:3px 8px}
 .btn-del{font-size:11px;padding:3px 8px;border:0.5px solid #F09595;border-radius:var(--border-radius-md);background:transparent;color:#A32D2D;cursor:pointer}
 .btn-del:hover{background:#FCEBEB}
-.tw{overflow-x:auto;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg)}
-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
-thead th{background:var(--color-background-secondary);padding:8px 8px;text-align:left;font-weight:500;font-size:11px;color:var(--color-text-secondary);border-bottom:0.5px solid var(--color-border-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-tbody tr{border-bottom:0.5px solid var(--color-border-tertiary)}
-tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:var(--color-background-secondary)}
-tbody td{padding:5px 8px;color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
-thead th:last-child,tbody td:last-child{position:sticky;right:0;z-index:2;background:var(--color-background-primary)}
-tbody tr:hover td:last-child{background:var(--color-background-secondary)}
-thead th:last-child{background:var(--color-background-secondary);z-index:3}
-thead th:last-child::before,tbody td:last-child::before{content:'';position:absolute;left:-8px;top:0;bottom:0;width:8px;background:linear-gradient(to right,transparent,rgba(0,0,0,0.06));pointer-events:none}
 .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:500}
 .bl{background:#EAF3DE;color:#3B6D11}.bb{background:#FAEEDA;color:#854F0B}
 .bd{background:#E6F1FB;color:#185FA5}.bp{background:#F1EFE8;color:#5F5E5A}
 .inline-sel{font-size:11px;padding:2px 6px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;max-width:100%}
 .inline-sel:focus{outline:none}
-.inline-txt{font-size:11px;padding:2px 6px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);max-width:100%;width:80px}
-.inline-txt:focus{outline:none}
+.pill-group{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.pill{font-size:12px;padding:4px 12px;border:0.5px solid var(--color-border-secondary);border-radius:99px;background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;white-space:nowrap;user-select:none}
+.pill:hover{background:var(--color-background-secondary)}
+.pill.active{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
+.order-list{display:flex;flex-direction:column;gap:8px}
+.ocard{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px 14px}
+.ocard:hover{border-color:var(--color-border-secondary)}
+.ocard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.ocard-meta{display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap}
+.ocard-cust{font-size:12px;font-weight:500;color:var(--color-text-primary);background:var(--color-background-secondary);border-radius:99px;padding:2px 9px;border:0.5px solid var(--color-border-tertiary)}
+.ocard-date{font-size:11px;color:var(--color-text-secondary)}
+.ocard-src{font-size:11px;color:var(--color-text-secondary)}
+.ocard-title{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.ocard-qty{font-size:12px;font-weight:400;color:var(--color-text-secondary)}
+.ocard-badges{display:flex;gap:5px;align-items:center;flex-wrap:wrap;flex-shrink:0}
+.ocard-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:0.5px solid var(--color-border-tertiary);flex-wrap:wrap;gap:8px}
+.ocard-prices{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ocard-price-item{display:flex;flex-direction:column}
+.ocard-price-label{font-size:10px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em}
+.ocard-price-val{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.ocard-price-profit{color:#3B6D11}
+.ocard-divider{width:1px;height:14px;background:var(--color-border-tertiary);flex-shrink:0}
+.ocard-actions{display:flex;gap:4px;flex-shrink:0}
+.ocard-dp-note{font-size:11px;color:#854F0B;background:#FAEEDA;border-radius:var(--border-radius-md);padding:3px 9px;margin-top:5px;display:inline-block}
+.tw-wrap{position:relative}
 .fp{display:none}.fp.open{display:block}
 .autocomplete-wrap{position:relative}
 .autocomplete-list{position:absolute;top:100%;left:0;right:0;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);z-index:100;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.12)}
@@ -230,33 +242,24 @@ thead th:last-child::before,tbody td:last-child::before{content:'';position:abso
   <div class="stats" id="stats-area"></div>
   <div class="toolbar">
     <input type="text" id="search-input" placeholder="Cari nama, produk..." oninput="renderTable()">
-    <select id="fp" onchange="renderTable()"><option value="">Semua pembayaran</option><option value="LUNAS">Lunas</option><option value="BELUM BAYAR">Belum bayar</option><option value="DP">DP</option></select>
-    <select id="fs" onchange="renderTable()"><option value="">Semua status</option><option value="SUDAH DIBELI">Sudah dibeli</option><option value="PENDING">Pending</option></select>
-    <select id="fsrc" onchange="renderTable()"><option value="">Semua source</option><option value="Instagram">Instagram</option><option value="Keluarga">Keluarga</option></select>
     <button class="btn btn-primary" onclick="toggleForm()">+ Tambah Order</button>
   </div>
-  <div class="tw-wrap">
-    <div class="tw">
-      <table>
-        <thead><tr>
-          <th style="width:65px">Source</th>
-          <th style="width:70px">Customer</th>
-          <th style="width:110px">Barang</th>
-          <th style="width:42px;text-align:center">Qty</th>
-          <th style="width:78px">Modal Rp</th>
-          <th style="width:78px">Harga Jual</th>
-          <th style="width:65px">Profit</th>
-          <th style="width:100px">Status Bayar</th>
-          <th style="width:78px">DP</th>
-          <th style="width:80px">Bank Transfer</th>
-          <th style="width:70px">Toko</th>
-          <th style="width:100px">Status Brg</th>
-          <th style="width:75px">Tanggal</th>
-          <th style="width:105px">Aksi</th>
-        </tr></thead>
-        <tbody id="order-tbody"></tbody>
-      </table>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+    <div class="pill-group" id="pills-pay">
+      <span class="pill active" data-val="" onclick="setPillFilter('pay','')">Semua</span>
+      <span class="pill" data-val="BELUM BAYAR" onclick="setPillFilter('pay','BELUM BAYAR')">Belum bayar</span>
+      <span class="pill" data-val="DP" onclick="setPillFilter('pay','DP')">DP</span>
+      <span class="pill" data-val="LUNAS" onclick="setPillFilter('pay','LUNAS')">Lunas</span>
     </div>
+    <div style="width:1px;height:16px;background:var(--color-border-tertiary);flex-shrink:0"></div>
+    <div class="pill-group" id="pills-brg">
+      <span class="pill active" data-val="" onclick="setPillFilter('brg','')">Semua status</span>
+      <span class="pill" data-val="PENDING" onclick="setPillFilter('brg','PENDING')">Pending</span>
+      <span class="pill" data-val="SUDAH DIBELI" onclick="setPillFilter('brg','SUDAH DIBELI')">Sudah dibeli</span>
+    </div>
+  </div>
+  <div class="tw-wrap">
+    <div class="order-list" id="order-tbody"></div>
     <div class="confirm-overlay" id="del-overlay">
       <div class="confirm-box">
         <div class="confirm-msg" id="del-msg">Hapus order ini?</div>
@@ -487,10 +490,16 @@ function renderStats(){
     <div class="sc"><div class="sc-label">Piutang</div><div class="sc-val" style="font-size:15px;color:#854F0B">${fRp(piutang)}</div><div class="sc-sub">${belum} belum bayar · ${dp} DP</div></div>`;
 }
 
-function getFiltered(){
-  const q=document.getElementById('search-input').value.toLowerCase();
-  const fp=document.getElementById('fp').value,fs=document.getElementById('fs').value,fsrc=document.getElementById('fsrc').value;
-  return activeOrders().filter(o=>(!q||o.cust.toLowerCase().includes(q)||o.barang.toLowerCase().includes(q))&&(!fp||o.payment===fp)&&(!fs||o.statusBrg===fs)&&(!fsrc||o.source===fsrc));
+let pillPay='', pillBrg='';
+function setPillFilter(type,val){
+  if(type==='pay'){
+    pillPay=val;
+    document.querySelectorAll('#pills-pay .pill').forEach(p=>p.classList.toggle('active',p.dataset.val===val));
+  } else {
+    pillBrg=val;
+    document.querySelectorAll('#pills-brg .pill').forEach(p=>p.classList.toggle('active',p.dataset.val===val));
+  }
+  curPage=1;renderTable();
 }
 
 function inlineChange(id,field,val){
@@ -499,95 +508,79 @@ function inlineChange(id,field,val){
   if(typeof pushToSupabase==='function'){setSyncStatus('syncing');pushToSupabase(o);}
 }
 
-function inlineSourceChange(id,sel){
-  if(sel.value==='__manual__'){renderTable();return;}
-  inlineChange(id,'source',sel.value);renderTable();
-}
-function inlineTokoChange(id,sel){
-  if(sel.value==='__manual__'){renderTable();return;}
-  inlineChange(id,'toko',sel.value);renderTable();
+function getFiltered(){
+  const q=(document.getElementById('search-input').value||'').toLowerCase();
+  return activeOrders().filter(o=>
+    (!q||o.cust.toLowerCase().includes(q)||o.barang.toLowerCase().includes(q))&&
+    (!pillPay||o.payment===pillPay)&&
+    (!pillBrg||o.statusBrg===pillBrg)
+  );
 }
 
 function renderTable(){
   const f=getFiltered(),tot=Math.max(1,Math.ceil(f.length/perPage));
   if(curPage>tot)curPage=tot;
-  // rebuild source filter options dynamically
-  const srcSel=document.getElementById('fsrc');
-  const curSrcVal=srcSel.value;
-  const allSrcs=[...new Set(orders.map(o=>o.source))].sort();
-  srcSel.innerHTML='<option value="">Semua source</option>'+allSrcs.map(s=>`<option value="${s}"${curSrcVal===s?' selected':''}>${s}</option>`).join('');
   const s=(curPage-1)*perPage,pg=f.slice(s,s+perPage);
-  document.getElementById('page-info').textContent=`${f.length} order ditemukan`;
+  document.getElementById('page-info').textContent=`${f.length} order`;
   document.getElementById('page-num').textContent=`${curPage} / ${tot}`;
   const tb=document.getElementById('order-tbody');
-  if(!pg.length){tb.innerHTML=`<tr><td colspan="14" class="empty">Tidak ada order</td></tr>`;return;}
-  tb.innerHTML=pg.map(o=>`<tr>
-    <td title="${o.source}">
-      <select class="inline-sel" onchange="inlineSourceChange(${o.id},this)" style="max-width:60px">
-        <option${o.source==='Instagram'?' selected':''}>Instagram</option>
-        <option${o.source==='Keluarga'?' selected':''}>Keluarga</option>
-        <option${o.source==='Teman'?' selected':''}>Teman</option>
-        <option${o.source==='WhatsApp'?' selected':''}>WhatsApp</option>
-        <option value="__manual__"${!['Instagram','Keluarga','Teman','WhatsApp'].includes(o.source)?' selected':''}>Lainnya...</option>
-      </select>
-      ${!['Instagram','Keluarga','Teman','WhatsApp'].includes(o.source)?`<input class="inline-txt" style="margin-top:2px" value="${o.source}" onchange="inlineChange(${o.id},'source',this.value)" placeholder="Source">`:''} 
-    </td>
-    <td title="${o.cust}">${o.cust}</td>
-    <td title="${o.barang}">${o.barang}</td>
-    <td style="text-align:center">${o.qty||1}</td>
-    <td>${fRp(o.rp)}</td>
-    <td>${fRp(o.jual)}</td>
-    <td style="color:#3B6D11">${fRp(o.profit)}</td>
-    <td>
-      <select class="inline-sel" onchange="inlineChange(${o.id},'payment',this.value);renderTable()" style="background:${o.payment==='LUNAS'?'#EAF3DE':o.payment==='DP'?'#E6F1FB':'#FAEEDA'};color:${o.payment==='LUNAS'?'#3B6D11':o.payment==='DP'?'#185FA5':'#854F0B'};border-color:${o.payment==='LUNAS'?'#97C459':o.payment==='DP'?'#85B7EB':'#EF9F27'}">
+  if(!pg.length){tb.innerHTML=`<div class="empty">Tidak ada order</div>`;return;}
+  const tokoOpts=['Bandara','Pharmacy','Direct Store','Online','Online OY','Offline OY','Coupang'];
+  tb.innerHTML=pg.map(o=>{
+    const tgl=o.tanggal?new Date(o.tanggal+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'2-digit'}):'—';
+    const payBg=o.payment==='LUNAS'?'#EAF3DE':o.payment==='DP'?'#E6F1FB':'#FAEEDA';
+    const payClr=o.payment==='LUNAS'?'#3B6D11':o.payment==='DP'?'#185FA5':'#854F0B';
+    const payBdr=o.payment==='LUNAS'?'#97C459':o.payment==='DP'?'#85B7EB':'#EF9F27';
+    const payLbl=o.payment==='LUNAS'?'Lunas':o.payment==='DP'?'DP':'Belum bayar';
+    const brgBg=o.statusBrg==='SUDAH DIBELI'?'#E6F1FB':'#F1EFE8';
+    const brgClr=o.statusBrg==='SUDAH DIBELI'?'#185FA5':'#5F5E5A';
+    const brgBdr=o.statusBrg==='SUDAH DIBELI'?'#85B7EB':'#B4B2A9';
+    const brgLbl=o.statusBrg==='SUDAH DIBELI'?'Sudah dibeli':'Pending';
+    const dpNote=o.payment==='DP'&&o.dp?`<div class="ocard-dp-note">DP ${fRp(o.dp)} · Sisa ${fRp(o.jual-(o.dp||0))}${o.bank?' · '+o.bank:''}</div>`:'';
+    return `<div class="ocard">
+  <div class="ocard-top">
+    <div style="flex:1;min-width:0">
+      <div class="ocard-meta">
+        <span class="ocard-cust">${o.cust}</span>
+        <span class="ocard-date">${tgl}</span>
+        <span style="color:var(--color-border-secondary)">·</span>
+        <span class="ocard-src">${o.source}</span>
+        ${o.toko?`<span style="color:var(--color-border-secondary)">·</span><span class="ocard-src">${o.toko}</span>`:''}
+      </div>
+      <div class="ocard-title">${o.barang} <span class="ocard-qty">× ${o.qty||1}</span></div>
+      ${dpNote}
+    </div>
+    <div class="ocard-badges">
+      <select class="inline-sel" onchange="inlineChange(${o.id},'payment',this.value);renderTable()" style="background:${payBg};color:${payClr};border-color:${payBdr};font-size:10px;padding:2px 5px">
         <option value="BELUM BAYAR"${o.payment==='BELUM BAYAR'?' selected':''}>Belum bayar</option>
         <option value="LUNAS"${o.payment==='LUNAS'?' selected':''}>Lunas</option>
         <option value="DP"${o.payment==='DP'?' selected':''}>DP</option>
       </select>
-    </td>
-    <td>
-      ${o.payment==='DP'?`<input class="inline-txt" style="width:70px" type="number" value="${o.dp||''}" placeholder="Jml DP" onchange="inlineChange(${o.id},'dp',parseFloat(this.value)||0);renderStats()"><div style="font-size:10px;color:#854F0B;margin-top:1px">${o.dp?'Sisa: '+fRp(o.jual-(o.dp||0)):''}</div>`:'—'}
-    </td>
-    <td>
-      <select class="inline-sel" style="max-width:72px" onchange="inlineChange(${o.id},'bank',this.value)">
-        <option value=""${!o.bank?' selected':''}>—</option>
-        <option value="BCA"${o.bank==='BCA'?' selected':''}>BCA</option>
-        <option value="Mandiri"${o.bank==='Mandiri'?' selected':''}>Mandiri</option>
-      </select>
-    </td>
-    <td>
-      <select class="inline-sel" onchange="inlineTokoChange(${o.id},this)">
-        <option${o.toko==='Bandara'?' selected':''}>Bandara</option>
-        <option${o.toko==='Pharmacy'?' selected':''}>Pharmacy</option>
-        <option${o.toko==='Direct Store'?' selected':''}>Direct Store</option>
-        <option${o.toko==='Online'?' selected':''}>Online</option>
-        <option${o.toko==='Online OY'?' selected':''}>Online OY</option>
-        <option${o.toko==='Offline OY'?' selected':''}>Offline OY</option>
-        <option${o.toko==='Coupang'?' selected':''}>Coupang</option>
-        <option value="__manual__"${!['Bandara','Pharmacy','Direct Store','Online','Online OY','Offline OY','Coupang'].includes(o.toko)?' selected':''}>Lainnya...</option>
-      </select>
-      ${!['Bandara','Pharmacy','Direct Store','Online','Online OY','Offline OY','Coupang'].includes(o.toko)?`<input class="inline-txt" style="margin-top:2px" value="${o.toko}" onchange="inlineChange(${o.id},'toko',this.value)" placeholder="Nama toko">`:''} 
-    </td>
-    <td>
-      <select class="inline-sel" onchange="inlineChange(${o.id},'statusBrg',this.value)" style="background:${o.statusBrg==='SUDAH DIBELI'?'#E6F1FB':'#F1EFE8'};color:${o.statusBrg==='SUDAH DIBELI'?'#185FA5':'#5F5E5A'};border-color:${o.statusBrg==='SUDAH DIBELI'?'#85B7EB':'#B4B2A9'}">
+      <select class="inline-sel" onchange="inlineChange(${o.id},'statusBrg',this.value);renderTable()" style="background:${brgBg};color:${brgClr};border-color:${brgBdr};font-size:10px;padding:2px 5px">
         <option value="PENDING"${o.statusBrg==='PENDING'?' selected':''}>Pending</option>
         <option value="SUDAH DIBELI"${o.statusBrg==='SUDAH DIBELI'?' selected':''}>Sudah dibeli</option>
       </select>
-    </td>
-    <td style="font-size:11px;color:var(--color-text-secondary)">${o.tanggal?new Date(o.tanggal+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'2-digit'}):'—'}</td>
-    <td>
-      <div style="display:flex;gap:4px;align-items:center">
-        <button class="btn btn-sm" onclick="editOrder(${o.id})">Edit</button>
-        <button class="btn btn-sm" onclick="duplicateOrder(${o.id})" title="Duplikat order ini">Duplikat</button>
-        <button class="btn-del" onclick="askDelete(${o.id},'${o.cust.replace(/'/g,"\\'")} — ${o.barang.replace(/'/g,"\\'")}')">Hapus</button>
-      </div>
-    </td>
-  </tr>`).join('');
+    </div>
+  </div>
+  <div class="ocard-bottom">
+    <div class="ocard-prices">
+      <div class="ocard-price-item"><span class="ocard-price-label">Modal</span><span class="ocard-price-val">${fRp(o.rp)}</span></div>
+      <div class="ocard-divider"></div>
+      <div class="ocard-price-item"><span class="ocard-price-label">Jual</span><span class="ocard-price-val">${fRp(o.jual)}</span></div>
+      <div class="ocard-divider"></div>
+      <div class="ocard-price-item"><span class="ocard-price-label">Profit</span><span class="ocard-price-val ocard-price-profit">${fRp(o.profit)}</span></div>
+    </div>
+    <div class="ocard-actions">
+      <button class="btn btn-sm" onclick="editOrder(${o.id})">Edit</button>
+      <button class="btn btn-sm" onclick="duplicateOrder(${o.id})">Duplikat</button>
+      <button class="btn-del" onclick="askDelete(${o.id},'${o.cust.replace(/'/g,"\\'")} — ${o.barang.replace(/'/g,"\\'")}')">Hapus</button>
+    </div>
+  </div>
+</div>`;
+  }).join('');
 }
 
 function chgPage(d){const f=getFiltered();curPage=Math.max(1,Math.min(Math.max(1,Math.ceil(f.length/perPage)),curPage+d));renderTable();}
-
-function askDelete(id,label){
   pendingDelId=id;
   document.getElementById('del-msg').textContent=`Hapus order "${label}"?`;
   document.getElementById('del-overlay').classList.add('show');
