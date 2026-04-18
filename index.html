@@ -553,7 +553,8 @@ function confirmDelete(){
   orders=orders.filter(o=>o.id!==idToDel);
   pendingDelId=null;
   document.getElementById('del-overlay').classList.remove('show');
-  if(typeof deleteFromSupabase==='function'){setSyncStatus('syncing');deleteFromSupabase(idToDel);}else{save();}
+  save();
+   if(typeof deleteFromSupabase==='function'){setSyncStatus('syncing');deleteFromSupabase(idToDel);}
   renderStats();renderTable();buildYearOptions();
 }
 
