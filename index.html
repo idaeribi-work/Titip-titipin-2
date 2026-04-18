@@ -454,6 +454,7 @@ function switchTab(t){
     document.getElementById('tab-'+x).classList.toggle('active',x===t);
     document.querySelectorAll('.tab')[i].classList.toggle('active',x===t);
   });
+  if(t==='orders')closeForm();
   if(t==='customers')renderCustomers();
   if(t==='kurs')renderKursUI();
   if(t==='produk')renderProduk();
@@ -1147,7 +1148,7 @@ subscribeRealtime();
 document.getElementById('form-panel').classList.remove('open');
 
 // ── PIN Lock ────────────────────────────────────────────────────
-const CORRECT_PIN = '1234'; // Ganti PIN di sini
+const CORRECT_PIN = '1804'; // Ganti PIN di sini
 const SESSION_KEY = 'jastip_pin_ok';
 let pinBuffer = '';
 
