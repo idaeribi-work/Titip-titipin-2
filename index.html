@@ -629,8 +629,10 @@ function toggleForm(){
   document.getElementById('f-src-manual').style.display='none';document.getElementById('f-src-manual').value='';
   document.getElementById('f-toko-manual').style.display='none';document.getElementById('f-toko-manual').value='';
   document.getElementById('f-tgl').value=new Date().toISOString().split('T')[0];
-  const p=document.getElementById('form-panel');p.classList.toggle('open');
-  if(p.classList.contains('open'))p.scrollIntoView({behavior:'smooth'});
+  const p=document.getElementById('form-panel');
+  const isOpen=p.classList.contains('open');
+  if(isOpen){p.classList.remove('open');}
+  else{p.classList.add('open');p.scrollIntoView({behavior:'smooth'});}
 }
 function closeForm(){
   document.getElementById('form-panel').classList.remove('open');
@@ -1141,6 +1143,8 @@ function deleteAndSync(id){
 buildYearOptions();renderStats();renderTable();fetchKurs();
 loadFromSupabase();
 subscribeRealtime();
+// Always ensure form is closed on initial page load
+document.getElementById('form-panel').classList.remove('open');
 
 // ── PIN Lock ────────────────────────────────────────────────────
 const CORRECT_PIN = '1234'; // Ganti PIN di sini
