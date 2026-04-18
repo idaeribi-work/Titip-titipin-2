@@ -294,7 +294,7 @@ tbody td{padding:5px 8px;color:var(--color-text-primary);overflow:hidden;text-ov
         <div class="fitem"><label>Harga Jual (Rp)</label><input id="f-jual" type="number" placeholder="0" oninput="calcProfit()"></div>
         <div class="fitem"><label>Estimasi Profit</label><input id="f-profit" readonly style="background:var(--color-background-secondary);color:#3B6D11;font-weight:500"></div>
         <div class="fitem"><label>Toko Pembelian</label>
-          <select id="f-toko" onchange="toggleManualToko()"><option>Bandara</option><option>Pharmacy</option><option>Direct Store</option><option>Online</option><option value="__manual__">Lainnya (isi manual)...</option></select>
+          <select id="f-toko" onchange="toggleManualToko()"><option>Bandara</option><option>Pharmacy</option><option>Direct Store</option><option>Online</option><option>Online OY</option><option>Offline OY</option><option>Coupang</option><option value="__manual__">Lainnya (isi manual)...</option></select>
           <input id="f-toko-manual" placeholder="Nama toko" style="display:none;margin-top:4px;font-size:13px;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)">
         </div>
         <div class="fitem"><label>Status Pembayaran</label><select id="f-pay" onchange="toggleDPField()"><option>BELUM BAYAR</option><option>LUNAS</option><option>DP</option></select></div>
@@ -557,9 +557,12 @@ function renderTable(){
         <option${o.toko==='Pharmacy'?' selected':''}>Pharmacy</option>
         <option${o.toko==='Direct Store'?' selected':''}>Direct Store</option>
         <option${o.toko==='Online'?' selected':''}>Online</option>
-        <option value="__manual__"${!['Bandara','Pharmacy','Direct Store','Online'].includes(o.toko)?' selected':''}>Lainnya...</option>
+        <option${o.toko==='Online OY'?' selected':''}>Online OY</option>
+        <option${o.toko==='Offline OY'?' selected':''}>Offline OY</option>
+        <option${o.toko==='Coupang'?' selected':''}>Coupang</option>
+        <option value="__manual__"${!['Bandara','Pharmacy','Direct Store','Online','Online OY','Offline OY','Coupang'].includes(o.toko)?' selected':''}>Lainnya...</option>
       </select>
-      ${!['Bandara','Pharmacy','Direct Store','Online'].includes(o.toko)?`<input class="inline-txt" style="margin-top:2px" value="${o.toko}" onchange="inlineChange(${o.id},'toko',this.value)" placeholder="Nama toko">`:''} 
+      ${!['Bandara','Pharmacy','Direct Store','Online','Online OY','Offline OY','Coupang'].includes(o.toko)?`<input class="inline-txt" style="margin-top:2px" value="${o.toko}" onchange="inlineChange(${o.id},'toko',this.value)" placeholder="Nama toko">`:''} 
     </td>
     <td>
       <select class="inline-sel" onchange="inlineChange(${o.id},'statusBrg',this.value)" style="background:${o.statusBrg==='SUDAH DIBELI'?'#E6F1FB':'#F1EFE8'};color:${o.statusBrg==='SUDAH DIBELI'?'#185FA5':'#5F5E5A'};border-color:${o.statusBrg==='SUDAH DIBELI'?'#85B7EB':'#B4B2A9'}">
@@ -669,7 +672,7 @@ function editOrder(id){
   const o=orders.find(x=>x.id===id);if(!o)return;
   editId=id;document.getElementById('form-title').textContent='Edit Order';
   const srcOptions=['Instagram','Keluarga','Teman','WhatsApp'];
-  const tokoOptions=['Bandara','Pharmacy','Direct Store','Online'];
+  const tokoOptions=['Bandara','Pharmacy','Direct Store','Online','Online OY','Offline OY','Coupang'];
   if(srcOptions.includes(o.source)){
     document.getElementById('f-src').value=o.source;
     document.getElementById('f-src-manual').style.display='none';document.getElementById('f-src-manual').value='';
