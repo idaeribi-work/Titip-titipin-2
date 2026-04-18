@@ -553,8 +553,7 @@ function confirmDelete(){
   orders=orders.filter(o=>o.id!==idToDel);
   pendingDelId=null;
   document.getElementById('del-overlay').classList.remove('show');
-  save();
-   if(typeof deleteFromSupabase==='function'){setSyncStatus('syncing');deleteFromSupabase(idToDel);}
+  if(typeof deleteFromSupabase==='function'){setSyncStatus('syncing');deleteFromSupabase(idToDel);}else{save();}
   renderStats();renderTable();buildYearOptions();
 }
 
@@ -993,17 +992,38 @@ async function loadFromSupabase(){
   try{
     const {data,error}=await sb.from('orders').select('*').order('id',{ascending:true});
     if(error)throw error;
-    if(data && data.length>0){
-      orders=data.map(fromRow);
-      nextId=Math.max(...orders.map(o=>o.id))+1;
-      localStorage.setItem('jastip_v5',JSON.stringify(orders));
-    }
+    // Always replace local data with Supabase data (including empty array)
+    orders=data.map(fromRow);
+    nextId=orders.length>0?Math.max(...orders.map(o=>o.id))+1:1;
+    localStorage.setItem('jastip_v5',JSON.stringify(orders));
     setSyncStatus('ok');
   }catch(e){
     console.error('Supabase load error:',e);
     setSyncStatus('error');
   }
   buildYearOptions();renderStats();renderTable();
+}
+
+// Realtime subscription for cross-device sync
+function subscribeRealtime(){
+  sb.channel('orders-realtime')
+    .on('postgres_changes',{event:'*',schema:'public',table:'orders'},async ()=>{
+      // Reload all data from Supabase on any change
+      setSyncStatus('syncing');
+      try{
+        const {data,error}=await sb.from('orders').select('*').order('id',{ascending:true});
+        if(error)throw error;
+        orders=data.map(fromRow);
+        nextId=orders.length>0?Math.max(...orders.map(o=>o.id))+1:1;
+        localStorage.setItem('jastip_v5',JSON.stringify(orders));
+        setSyncStatus('ok');
+      }catch(e){
+        console.error('Realtime reload error:',e);
+        setSyncStatus('error');
+      }
+      buildYearOptions();renderStats();renderTable();
+    })
+    .subscribe();
 }
 
 // Push single order upsert to Supabase
@@ -1056,9 +1076,10 @@ function deleteAndSync(id){
 // ── Init ────────────────────────────────────────────────────────
 buildYearOptions();renderStats();renderTable();fetchKurs();
 loadFromSupabase();
+subscribeRealtime();
 
 // ── PIN Lock ────────────────────────────────────────────────────
-const CORRECT_PIN = '1804'; // Ganti PIN di sini
+const CORRECT_PIN = '1234'; // Ganti PIN di sini
 const SESSION_KEY = 'jastip_pin_ok';
 let pinBuffer = '';
 
