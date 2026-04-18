@@ -248,7 +248,7 @@ tbody td{padding:5px 8px;color:var(--color-text-primary);overflow:hidden;text-ov
           <th style="width:70px">Toko</th>
           <th style="width:100px">Status Brg</th>
           <th style="width:75px">Tanggal</th>
-          <th style="width:75px">Aksi</th>
+          <th style="width:105px">Aksi</th>
         </tr></thead>
         <tbody id="order-tbody"></tbody>
       </table>
@@ -571,6 +571,7 @@ function renderTable(){
     <td>
       <div style="display:flex;gap:4px;align-items:center">
         <button class="btn btn-sm" onclick="editOrder(${o.id})">Edit</button>
+        <button class="btn btn-sm" onclick="duplicateOrder(${o.id})" title="Duplikat order ini">Duplikat</button>
         <button class="btn-del" onclick="askDelete(${o.id},'${o.cust.replace(/'/g,"\\'")} — ${o.barang.replace(/'/g,"\\'")}')">Hapus</button>
       </div>
     </td>
@@ -655,6 +656,14 @@ function calcProfit(){
 function autoConvert(type){
   if(type==='won'){const v=parseFloat(document.getElementById('f-won').value)||0;if(v>0){document.getElementById('f-rp').value=Math.round(v*(kursKRW/1000));calcProfit();}}
   else{const v=parseFloat(document.getElementById('f-usd').value)||0;if(v>0){document.getElementById('f-rp').value=Math.round(v*kursUSD);calcProfit();}}
+}
+function duplicateOrder(id){
+  const o=orders.find(x=>x.id===id);if(!o)return;
+  const d={...o,id:nextId++,payment:'BELUM BAYAR',dp:0,tanggal:new Date().toISOString().split('T')[0]};
+  orders.push(d);
+  save();
+  if(typeof pushToSupabase==='function'){setSyncStatus('syncing');pushToSupabase(d);}
+  renderStats();renderTable();buildYearOptions();
 }
 function editOrder(id){
   const o=orders.find(x=>x.id===id);if(!o)return;
