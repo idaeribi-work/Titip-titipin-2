@@ -351,20 +351,33 @@ tbody td{padding:5px 8px;color:var(--color-text-primary);overflow:hidden;text-ov
 
 <div id="tab-kurs" class="panel">
   <div class="kurs-section">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-      <div class="kurs-title" style="margin-bottom:0">Kurs saat ini</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span id="kurs-status" style="font-size:11px;color:var(--color-text-secondary)"></span>
-        <button class="btn btn-sm" onclick="fetchKurs()">Refresh</button>
+    <div class="kurs-title">Input Kurs</div>
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:14px">Masukkan kurs terkini secara manual. Kurs ini akan digunakan untuk konversi di seluruh dashboard.</div>
+    <div class="kurs-grid">
+      <div class="kurs-input-group">
+        <label>USD &rarr; IDR <span style="font-weight:400;color:var(--color-text-secondary)">(per 1 USD)</span></label>
+        <input type="number" id="manual-usd" placeholder="contoh: 16500" oninput="updateManualKurs()">
+      </div>
+      <div class="kurs-input-group">
+        <label>KRW &rarr; IDR <span style="font-weight:400;color:var(--color-text-secondary)">(per 1.000 KRW)</span></label>
+        <input type="number" id="manual-krw" placeholder="contoh: 11500" oninput="updateManualKurs()">
       </div>
     </div>
-    <div class="kurs-grid">
-      <div class="kurs-card"><div class="kurs-pair">USD &rarr; IDR</div><div class="kurs-rate" id="kurs-usd">Memuat...</div><div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">per 1 USD</div></div>
-      <div class="kurs-card"><div class="kurs-pair">KRW &rarr; IDR</div><div class="kurs-rate" id="kurs-krw">Memuat...</div><div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">per 1.000 KRW</div></div>
+    <div class="kurs-grid" style="margin-top:10px">
+      <div class="kurs-card">
+        <div class="kurs-pair">USD &rarr; IDR</div>
+        <div class="kurs-rate" id="kurs-usd">Rp0</div>
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">per 1 USD</div>
+      </div>
+      <div class="kurs-card">
+        <div class="kurs-pair">KRW &rarr; IDR</div>
+        <div class="kurs-rate" id="kurs-krw">Rp0</div>
+        <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">per 1.000 KRW</div>
+      </div>
     </div>
   </div>
   <div class="kurs-section">
-    <div class="kurs-title">Konversi harga</div>
+    <div class="kurs-title">Kalkulator Konversi</div>
     <div class="kurs-input-row">
       <div class="kurs-input-group"><label>Pilih mata uang</label><select id="conv-from" onchange="doConvert()"><option value="usd">USD (Dollar)</option><option value="krw">KRW (Won Korea)</option><option value="idr">IDR (Rupiah)</option></select></div>
       <div class="kurs-input-group"><label id="conv-label">Jumlah (USD)</label><input type="number" id="conv-amount" placeholder="Masukkan jumlah" oninput="doConvert()"></div>
@@ -378,20 +391,13 @@ tbody td{padding:5px 8px;color:var(--color-text-primary);overflow:hidden;text-ov
       </div>
     </div>
   </div>
-  <div class="kurs-section">
-    <div class="kurs-title">Input kurs manual</div>
-    <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:10px">Gunakan ini jika kurs otomatis tidak tersedia</div>
-    <div class="kurs-grid">
-      <div class="kurs-input-group"><label>USD &rarr; IDR (manual)</label><input type="number" id="manual-usd" placeholder="contoh: 16500" oninput="updateManualKurs()"></div>
-      <div class="kurs-input-group"><label>KRW &rarr; IDR (per 1000 Won)</label><input type="number" id="manual-krw" placeholder="contoh: 11500" oninput="updateManualKurs()"></div>
-    </div>
-  </div>
 </div>
 
 <script>
 const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 document.getElementById('date-lbl').textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-let kursUSD=16400,kursKRW=11800,kursLive=false;
+let kursUSD=parseFloat(localStorage.getItem('jastip_kurs_usd'))||16400;
+let kursKRW=parseFloat(localStorage.getItem('jastip_kurs_krw'))||11800;
 let orders=JSON.parse(localStorage.getItem('jastip_v5')||'null')||[
   {id:1,source:'Keluarga',cust:'Kak Adek',barang:'Rejuran Gold 30ml',qty:1,won:'',usd:'21.54',rp:370488,jual:540000,profit:169512,payment:'LUNAS',toko:'Bandara',statusBrg:'SUDAH DIBELI',resi:'',tanggal:'2025-03-10'},
   {id:2,source:'Instagram',cust:'Vidia',barang:'Rejuran Turnover Mask',qty:2,won:'',usd:'12.14',rp:212450,jual:430000,profit:217550,payment:'BELUM BAYAR',toko:'Bandara',statusBrg:'SUDAH DIBELI',resi:'',tanggal:'2025-03-10'},
@@ -966,25 +972,26 @@ function delFromCust(id,custName){
   renderStats();renderTable();renderCustomers();buildYearOptions();
 }
 
-async function fetchKurs(){
-  document.getElementById('kurs-status').innerHTML='<span class="status-dot dot-manual"></span>Memuat...';
-  try{const r=await fetch('https://api.exchangerate-api.com/v4/latest/USD');if(!r.ok)throw new Error();
-    const d=await r.json();kursUSD=Math.round(d.rates.IDR);kursKRW=Math.round(d.rates.IDR/d.rates.KRW*1000);kursLive=true;renderKursUI();
-  }catch(e){kursLive=false;renderKursUI();}
-}
+async function fetchKurs(){renderKursUI();}
 function renderKursUI(){
-  document.getElementById('kurs-usd').textContent='Rp'+kursUSD.toLocaleString('id-ID');
-  document.getElementById('kurs-krw').textContent='Rp'+kursKRW.toLocaleString('id-ID');
-  document.getElementById('kurs-status').innerHTML=kursLive?'<span class="status-dot dot-live"></span>Live':'<span class="status-dot dot-manual"></span>Estimasi (offline)';
+  document.getElementById('kurs-usd').textContent=kursUSD>0?'Rp'+kursUSD.toLocaleString('id-ID'):'—';
+  document.getElementById('kurs-krw').textContent=kursKRW>0?'Rp'+kursKRW.toLocaleString('id-ID'):'—';
+  const u=document.getElementById('manual-usd');const k=document.getElementById('manual-krw');
+  if(u&&!u.value&&kursUSD>0)u.value=kursUSD;
+  if(k&&!k.value&&kursKRW>0)k.value=kursKRW;
   doConvert();
 }
 function updateManualKurs(){
   const u=parseFloat(document.getElementById('manual-usd').value),k=parseFloat(document.getElementById('manual-krw').value);
-  if(u>0){kursUSD=u;kursLive=false;}if(k>0){kursKRW=k;kursLive=false;}renderKursUI();
+  if(u>0){kursUSD=u;localStorage.setItem('jastip_kurs_usd',u);}
+  if(k>0){kursKRW=k;localStorage.setItem('jastip_kurs_krw',k);}
+  document.getElementById('kurs-usd').textContent=kursUSD>0?'Rp'+kursUSD.toLocaleString('id-ID'):'—';
+  document.getElementById('kurs-krw').textContent=kursKRW>0?'Rp'+kursKRW.toLocaleString('id-ID'):'—';
+  doConvert();
 }
 function doConvert(){
   const from=document.getElementById('conv-from').value,amt=parseFloat(document.getElementById('conv-amount').value)||0,markup=parseFloat(document.getElementById('conv-markup').value)||0;
-  document.getElementById('conv-label').textContent={usd:'Jumlah (USD $)',krw:'Jumlah (KRW &#8361;)',idr:'Jumlah (IDR Rp)'}[from];
+  document.getElementById('conv-label').textContent=from==='usd'?'Jumlah (USD $)':from==='krw'?'Jumlah (KRW ₩)':'Jumlah (IDR Rp)';
   if(!amt){document.getElementById('conv-result').style.display='none';return;}
   const modal=from==='usd'?Math.round(amt*kursUSD):from==='krw'?Math.round(amt*(kursKRW/1000)):amt;
   const markupAmt=Math.round(modal*(markup/100));
@@ -1149,7 +1156,7 @@ subscribeRealtime();
 document.getElementById('form-panel').classList.remove('open');
 
 // ── PIN Lock ────────────────────────────────────────────────────
-const CORRECT_PIN = '1804'; // Ganti PIN di sini
+const CORRECT_PIN = '1234'; // Ganti PIN di sini
 const SESSION_KEY = 'jastip_pin_ok';
 let pinBuffer = '';
 
