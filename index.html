@@ -1182,7 +1182,7 @@ function pinPress(val) {
   if (pinBuffer.length === 4) {
     setTimeout(() => {
       if (pinBuffer === CORRECT_PIN) {
-        sessionStorage.setItem(SESSION_KEY, '1');
+        try { localStorage.setItem(SESSION_KEY, '1'); } catch(e) {}
         document.getElementById('pin-overlay').style.display = 'none';
       } else {
         err.textContent = 'PIN salah, coba lagi';
@@ -1199,11 +1199,12 @@ function updatePinDots() {
   }
 }
 
-// Check session on load
 (function checkPin() {
-  if (sessionStorage.getItem(SESSION_KEY) === '1') {
-    document.getElementById('pin-overlay').style.display = 'none';
-  }
+  try {
+    if (localStorage.getItem(SESSION_KEY) === '1') {
+      document.getElementById('pin-overlay').style.display = 'none';
+    }
+  } catch(e) {}
 })();
 
 // Keyboard support
