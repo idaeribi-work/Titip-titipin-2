@@ -71,7 +71,11 @@ tbody td{padding:5px 8px;color:var(--color-text-primary);overflow:hidden;text-ov
 .inline-sel:focus{outline:none}
 .inline-txt{font-size:11px;padding:2px 6px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);max-width:100%;width:80px}
 .inline-txt:focus{outline:none}
-.fp{display:none}.fp.open{display:block}
+.autocomplete-wrap{position:relative}
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);z-index:100;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.autocomplete-item{padding:7px 10px;font-size:13px;cursor:pointer;color:var(--color-text-primary)}
+.autocomplete-item:hover{background:var(--color-background-secondary)}
+
 .form-wrap{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:16px;margin-top:16px}
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fitem{display:flex;flex-direction:column;gap:4px}
@@ -221,7 +225,7 @@ tbody td{padding:5px 8px;color:var(--color-text-primary);overflow:hidden;text-ov
   <div class="stats" id="stats-area"></div>
   <div class="toolbar">
     <input type="text" id="search-input" placeholder="Cari nama, produk..." oninput="renderTable()">
-    <select id="fp" onchange="renderTable()"><option value="">Semua pembayaran</option><option value="LUNAS">Lunas</option><option value="BELUM BAYAR">Belum bayar</option></select>
+    <select id="fp" onchange="renderTable()"><option value="">Semua pembayaran</option><option value="LUNAS">Lunas</option><option value="BELUM BAYAR">Belum bayar</option><option value="DP">DP</option></select>
     <select id="fs" onchange="renderTable()"><option value="">Semua status</option><option value="SUDAH DIBELI">Sudah dibeli</option><option value="PENDING">Pending</option></select>
     <select id="fsrc" onchange="renderTable()"><option value="">Semua source</option><option value="Instagram">Instagram</option><option value="Keluarga">Keluarga</option></select>
     <button class="btn btn-primary" onclick="toggleForm()">+ Tambah Order</button>
@@ -238,6 +242,8 @@ tbody td{padding:5px 8px;color:var(--color-text-primary);overflow:hidden;text-ov
           <th style="width:78px">Harga Jual</th>
           <th style="width:65px">Profit</th>
           <th style="width:100px">Status Bayar</th>
+          <th style="width:78px">DP</th>
+          <th style="width:80px">Bank Transfer</th>
           <th style="width:70px">Toko</th>
           <th style="width:100px">Status Brg</th>
           <th style="width:75px">Tanggal</th>
@@ -268,8 +274,18 @@ tbody td{padding:5px 8px;color:var(--color-text-primary);overflow:hidden;text-ov
           <select id="f-src" onchange="toggleManualSrc()"><option>Instagram</option><option>Keluarga</option><option>Teman</option><option>WhatsApp</option><option value="__manual__">Lainnya (isi manual)...</option></select>
           <input id="f-src-manual" placeholder="Nama source" style="display:none;margin-top:4px;font-size:13px;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)">
         </div>
-        <div class="fitem"><label>Nama Customer</label><input id="f-cust" placeholder="Nama customer"></div>
-        <div class="fitem"><label>Nama Barang</label><input id="f-brg" placeholder="Nama produk"></div>
+        <div class="fitem"><label>Nama Customer</label>
+          <div class="autocomplete-wrap">
+            <input id="f-cust" placeholder="Nama customer" autocomplete="off" oninput="showAutocomplete('f-cust','ac-cust',getUniqueCusts)" onblur="hideAC('ac-cust')">
+            <div class="autocomplete-list" id="ac-cust" style="display:none"></div>
+          </div>
+        </div>
+        <div class="fitem"><label>Nama Barang</label>
+          <div class="autocomplete-wrap">
+            <input id="f-brg" placeholder="Nama produk" autocomplete="off" oninput="showAutocomplete('f-brg','ac-brg',getUniqueBarang)" onblur="hideAC('ac-brg')">
+            <div class="autocomplete-list" id="ac-brg" style="display:none"></div>
+          </div>
+        </div>
         <div class="fitem"><label>Jumlah Barang</label><input id="f-qty" type="number" placeholder="1" min="1" value="1"></div>
         <div class="fitem"><label>Harga Won (&#8361;)</label><input id="f-won" type="number" placeholder="0" oninput="autoConvert('won')"></div>
         <div class="fitem"><label>Harga USD ($)</label><input id="f-usd" type="number" placeholder="0" oninput="autoConvert('usd')"></div>
@@ -280,7 +296,9 @@ tbody td{padding:5px 8px;color:var(--color-text-primary);overflow:hidden;text-ov
           <select id="f-toko" onchange="toggleManualToko()"><option>Bandara</option><option>Pharmacy</option><option>Direct Store</option><option>Online</option><option value="__manual__">Lainnya (isi manual)...</option></select>
           <input id="f-toko-manual" placeholder="Nama toko" style="display:none;margin-top:4px;font-size:13px;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)">
         </div>
-        <div class="fitem"><label>Status Pembayaran</label><select id="f-pay"><option>BELUM BAYAR</option><option>LUNAS</option></select></div>
+        <div class="fitem"><label>Status Pembayaran</label><select id="f-pay" onchange="toggleDPField()"><option>BELUM BAYAR</option><option>LUNAS</option><option>DP</option></select></div>
+        <div class="fitem" id="dp-field-wrap" style="display:none"><label>Jumlah DP (Rp)</label><input id="f-dp" type="number" placeholder="0" oninput="calcProfit()"></div>
+        <div class="fitem"><label>Bank Transfer</label><select id="f-bank"><option value="">— Pilih bank —</option><option value="BCA">BCA</option><option value="Mandiri">Mandiri</option></select></div>
         <div class="fitem"><label>Status Barang</label><select id="f-sbrg"><option>PENDING</option><option>SUDAH DIBELI</option></select></div>
         <div class="fitem"><label>Tanggal Jastip</label><input id="f-tgl" type="date"></div>
         <div class="fitem"><label>No Resi</label><input id="f-resi" placeholder="Opsional"></div>
@@ -447,13 +465,14 @@ function activeOrders(){return orders.filter(matchGlobalFilter);}
 function renderStats(){
   const src=activeOrders();
   const tot=src.length,jual=src.reduce((s,o)=>s+o.jual,0),profit=src.reduce((s,o)=>s+o.profit,0);
-  const lunas=src.filter(o=>o.payment==='LUNAS').length,belum=src.filter(o=>o.payment==='BELUM BAYAR').length;
-  const piutang=src.filter(o=>o.payment==='BELUM BAYAR').reduce((s,o)=>s+o.jual,0);
+  const lunas=src.filter(o=>o.payment==='LUNAS').length,belum=src.filter(o=>o.payment==='BELUM BAYAR').length,dp=src.filter(o=>o.payment==='DP').length;
+  const piutang=src.filter(o=>o.payment==='BELUM BAYAR').reduce((s,o)=>s+o.jual,0)
+                +src.filter(o=>o.payment==='DP').reduce((s,o)=>s+(o.jual-(o.dp||0)),0);
   document.getElementById('stats-area').innerHTML=`
-    <div class="sc"><div class="sc-label">Total Order</div><div class="sc-val">${tot}</div><div class="sc-sub">${lunas} lunas &middot; ${belum} belum</div></div>
+    <div class="sc"><div class="sc-label">Total Order</div><div class="sc-val">${tot}</div><div class="sc-sub">${lunas} lunas · ${belum} belum · ${dp} DP</div></div>
     <div class="sc"><div class="sc-label">Total Penjualan</div><div class="sc-val" style="font-size:15px">${fRp(jual)}</div><div class="sc-sub">Semua order</div></div>
     <div class="sc"><div class="sc-label">Total Profit</div><div class="sc-val" style="font-size:15px;color:#3B6D11">${fRp(profit)}</div><div class="sc-sub">Setelah modal</div></div>
-    <div class="sc"><div class="sc-label">Piutang</div><div class="sc-val" style="font-size:15px;color:#854F0B">${fRp(piutang)}</div><div class="sc-sub">${belum} order belum bayar</div></div>`;
+    <div class="sc"><div class="sc-label">Piutang</div><div class="sc-val" style="font-size:15px;color:#854F0B">${fRp(piutang)}</div><div class="sc-sub">${belum} belum bayar · ${dp} DP</div></div>`;
 }
 
 function getFiltered(){
@@ -489,7 +508,7 @@ function renderTable(){
   document.getElementById('page-info').textContent=`${f.length} order ditemukan`;
   document.getElementById('page-num').textContent=`${curPage} / ${tot}`;
   const tb=document.getElementById('order-tbody');
-  if(!pg.length){tb.innerHTML=`<tr><td colspan="12" class="empty">Tidak ada order</td></tr>`;return;}
+  if(!pg.length){tb.innerHTML=`<tr><td colspan="14" class="empty">Tidak ada order</td></tr>`;return;}
   tb.innerHTML=pg.map(o=>`<tr>
     <td title="${o.source}">
       <select class="inline-sel" onchange="inlineSourceChange(${o.id},this)" style="max-width:60px">
@@ -508,9 +527,20 @@ function renderTable(){
     <td>${fRp(o.jual)}</td>
     <td style="color:#3B6D11">${fRp(o.profit)}</td>
     <td>
-      <select class="inline-sel" onchange="inlineChange(${o.id},'payment',this.value)" style="background:${o.payment==='LUNAS'?'#EAF3DE':'#FAEEDA'};color:${o.payment==='LUNAS'?'#3B6D11':'#854F0B'};border-color:${o.payment==='LUNAS'?'#97C459':'#EF9F27'}">
+      <select class="inline-sel" onchange="inlineChange(${o.id},'payment',this.value);renderTable()" style="background:${o.payment==='LUNAS'?'#EAF3DE':o.payment==='DP'?'#E6F1FB':'#FAEEDA'};color:${o.payment==='LUNAS'?'#3B6D11':o.payment==='DP'?'#185FA5':'#854F0B'};border-color:${o.payment==='LUNAS'?'#97C459':o.payment==='DP'?'#85B7EB':'#EF9F27'}">
         <option value="BELUM BAYAR"${o.payment==='BELUM BAYAR'?' selected':''}>Belum bayar</option>
         <option value="LUNAS"${o.payment==='LUNAS'?' selected':''}>Lunas</option>
+        <option value="DP"${o.payment==='DP'?' selected':''}>DP</option>
+      </select>
+    </td>
+    <td>
+      ${o.payment==='DP'?`<input class="inline-txt" style="width:70px" type="number" value="${o.dp||''}" placeholder="Jml DP" onchange="inlineChange(${o.id},'dp',parseFloat(this.value)||0);renderStats()"><div style="font-size:10px;color:#854F0B;margin-top:1px">${o.dp?'Sisa: '+fRp(o.jual-(o.dp||0)):''}</div>`:'—'}
+    </td>
+    <td>
+      <select class="inline-sel" style="max-width:72px" onchange="inlineChange(${o.id},'bank',this.value)">
+        <option value=""${!o.bank?' selected':''}>—</option>
+        <option value="BCA"${o.bank==='BCA'?' selected':''}>BCA</option>
+        <option value="Mandiri"${o.bank==='Mandiri'?' selected':''}>Mandiri</option>
       </select>
     </td>
     <td>
@@ -557,6 +587,29 @@ function confirmDelete(){
   renderStats();renderTable();buildYearOptions();
 }
 
+function toggleDPField(){
+  const v=document.getElementById('f-pay').value;
+  document.getElementById('dp-field-wrap').style.display=v==='DP'?'flex':'none';
+}
+
+function getUniqueCusts(){return [...new Set(orders.map(o=>o.cust).filter(Boolean))].sort();}
+function getUniqueBarang(){return [...new Set(orders.map(o=>o.barang).filter(Boolean))].sort();}
+
+function showAutocomplete(inputId,listId,getItems){
+  const inp=document.getElementById(inputId);
+  const list=document.getElementById(listId);
+  const q=(inp.value||'').toLowerCase().trim();
+  const items=getItems().filter(x=>x.toLowerCase().includes(q)&&x!==inp.value);
+  if(!items.length||!q){list.style.display='none';return;}
+  list.innerHTML=items.slice(0,8).map(x=>`<div class="autocomplete-item" onmousedown="pickAC('${inputId}','${listId}',${JSON.stringify(x)})">${x}</div>`).join('');
+  list.style.display='block';
+}
+function pickAC(inputId,listId,val){
+  document.getElementById(inputId).value=val;
+  document.getElementById(listId).style.display='none';
+}
+function hideAC(listId){setTimeout(()=>{const el=document.getElementById(listId);if(el)el.style.display='none';},150);}
+
 function toggleManualSrc(){
   const sel=document.getElementById('f-src'),inp=document.getElementById('f-src-manual');
   inp.style.display=sel.value==='__manual__'?'block':'none';
@@ -570,7 +623,8 @@ function toggleManualToko(){
 function toggleForm(){
   editId=null;
   document.getElementById('form-title').textContent='Tambah Order Baru';
-  ['f-src','f-cust','f-brg','f-won','f-usd','f-rp','f-jual','f-profit','f-toko','f-pay','f-sbrg','f-resi'].forEach(id=>{const el=document.getElementById(id);if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';});
+  ['f-src','f-cust','f-brg','f-won','f-usd','f-rp','f-jual','f-profit','f-toko','f-pay','f-sbrg','f-resi','f-dp','f-bank'].forEach(id=>{const el=document.getElementById(id);if(el){if(el.tagName==='SELECT')el.selectedIndex=0;else el.value='';}}); 
+  document.getElementById('dp-field-wrap').style.display='none';
   document.getElementById('f-qty').value='1';
   document.getElementById('f-src-manual').style.display='none';document.getElementById('f-src-manual').value='';
   document.getElementById('f-toko-manual').style.display='none';document.getElementById('f-toko-manual').value='';
@@ -618,6 +672,9 @@ function editOrder(id){
     document.getElementById('f-toko-manual').style.display='block';document.getElementById('f-toko-manual').value=o.toko;
   }
   document.getElementById('f-pay').value=o.payment;
+  toggleDPField();
+  if(o.payment==='DP')document.getElementById('f-dp').value=o.dp||'';
+  document.getElementById('f-bank').value=o.bank||'';
   document.getElementById('f-sbrg').value=o.statusBrg;document.getElementById('f-resi').value=o.resi||'';
   document.getElementById('f-tgl').value=o.tanggal||'';
   const p=document.getElementById('form-panel');p.classList.add('open');p.scrollIntoView({behavior:'smooth'});
@@ -628,10 +685,13 @@ function saveOrder(){
   const srcVal=srcSel==='__manual__'?(document.getElementById('f-src-manual').value.trim()||'Lainnya'):srcSel;
   const tokoSel=document.getElementById('f-toko').value;
   const tokoVal=tokoSel==='__manual__'?(document.getElementById('f-toko-manual').value.trim()||'Lainnya'):tokoSel;
+  const payVal=document.getElementById('f-pay').value;
+  const dpVal=payVal==='DP'?(parseFloat(document.getElementById('f-dp').value)||0):0;
+  const bankVal=document.getElementById('f-bank').value;
   const d={source:srcVal,cust:document.getElementById('f-cust').value.trim(),
     barang:document.getElementById('f-brg').value.trim(),qty:parseInt(document.getElementById('f-qty').value)||1,
     won:document.getElementById('f-won').value,usd:document.getElementById('f-usd').value,
-    rp,jual,profit:jual-rp,payment:document.getElementById('f-pay').value,toko:tokoVal,
+    rp,jual,profit:jual-rp,payment:payVal,dp:dpVal,bank:bankVal,toko:tokoVal,
     statusBrg:document.getElementById('f-sbrg').value,resi:document.getElementById('f-resi').value.trim(),
     tanggal:document.getElementById('f-tgl').value};
   if(!d.cust||!d.barang){alert('Nama customer dan barang wajib diisi.');return;}
@@ -949,6 +1009,8 @@ function toRow(o){
     jual: o.jual,
     profit: o.profit,
     payment: o.payment,
+    dp: o.dp||0,
+    bank: o.bank||'',
     toko: o.toko,
     status_brg: o.statusBrg,
     resi: o.resi||'',
@@ -970,6 +1032,8 @@ function fromRow(r){
     jual: Number(r.jual)||0,
     profit: Number(r.profit)||0,
     payment: r.payment||'BELUM BAYAR',
+    dp: Number(r.dp)||0,
+    bank: r.bank||'',
     toko: r.toko||'',
     statusBrg: r.status_brg||'PENDING',
     resi: r.resi||'',
