@@ -64,6 +64,10 @@ tbody tr{border-bottom:0.5px solid var(--color-border-tertiary)}
 tbody tr:last-child{border-bottom:none}
 tbody tr:hover{background:var(--color-background-secondary)}
 tbody td{padding:5px 8px;color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+thead th:last-child,tbody td:last-child{position:sticky;right:0;z-index:2;background:var(--color-background-primary)}
+tbody tr:hover td:last-child{background:var(--color-background-secondary)}
+thead th:last-child{background:var(--color-background-secondary);z-index:3}
+thead th:last-child::before,tbody td:last-child::before{content:'';position:absolute;left:-8px;top:0;bottom:0;width:8px;background:linear-gradient(to right,transparent,rgba(0,0,0,0.06));pointer-events:none}
 .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:500}
 .bl{background:#EAF3DE;color:#3B6D11}.bb{background:#FAEEDA;color:#854F0B}
 .bd{background:#E6F1FB;color:#185FA5}.bp{background:#F1EFE8;color:#5F5E5A}
