@@ -593,7 +593,16 @@ function showAutocomplete(inputId,listId,getItems){
   const q=(inp.value||'').toLowerCase().trim();
   const items=getItems().filter(x=>x.toLowerCase().includes(q)&&x!==inp.value);
   if(!items.length||!q){list.style.display='none';return;}
-  list.innerHTML=items.slice(0,8).map(x=>`<div class="autocomplete-item" onmousedown="pickAC('${inputId}','${listId}',${JSON.stringify(x)})">${x}</div>`).join('');
+  list.innerHTML=items.slice(0,8).map(x=>{
+    const div=document.createElement('div');
+    div.className='autocomplete-item';
+    div.textContent=x;
+    return div.outerHTML.replace('<div ','<div data-ac-input="'+inputId+'" data-ac-list="'+listId+'" ');
+  }).join('');
+  // Store actual values safely to avoid quoting issues
+  list.querySelectorAll('.autocomplete-item').forEach((el,i)=>{
+    el._acVal=items[i];
+  });
   list.style.display='block';
 }
 function pickAC(inputId,listId,val){
@@ -601,6 +610,18 @@ function pickAC(inputId,listId,val){
   document.getElementById(listId).style.display='none';
 }
 function hideAC(listId){setTimeout(()=>{const el=document.getElementById(listId);if(el)el.style.display='none';},150);}
+
+// Global mousedown handler for autocomplete — fires before blur, prevents race condition
+document.addEventListener('mousedown',function(e){
+  const item=e.target.closest('.autocomplete-item');
+  if(!item)return;
+  e.preventDefault(); // prevent input blur before we can pick
+  const inputId=item.dataset.acInput;
+  const listId=item.dataset.acList;
+  const val=item._acVal||item.textContent;
+  if(inputId){document.getElementById(inputId).value=val;}
+  if(listId){document.getElementById(listId).style.display='none';}
+});
 
 function toggleManualSrc(){
   const sel=document.getElementById('f-src'),inp=document.getElementById('f-src-manual');
