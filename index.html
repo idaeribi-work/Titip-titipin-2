@@ -86,10 +86,6 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f2;color:#1a
 .ocard-divider{width:1px;height:14px;background:var(--color-border-tertiary);flex-shrink:0}
 .ocard-actions{display:flex;gap:4px;flex-shrink:0}
 .ocard-dp-note{font-size:11px;color:#854F0B;background:#FAEEDA;border-radius:var(--border-radius-md);padding:3px 9px;margin-top:5px;display:inline-block}
-.tw-wrap{position:relative}
-.confirm-box{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:20px 24px;max-width:280px;width:100%;text-align:center}
-.confirm-msg{font-size:13px;color:var(--color-text-primary);margin-bottom:14px;line-height:1.5}
-.confirm-actions{display:flex;gap:8px;justify-content:center}
 .fp{display:none}.fp.open{display:block}
 .autocomplete-wrap{position:relative}
 .autocomplete-list{position:absolute;top:100%;left:0;right:0;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);z-index:100;max-height:160px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.12)}
@@ -141,6 +137,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f2;color:#1a
 .rank-bar-wrap{width:140px;height:8px;background:var(--color-background-secondary);border-radius:4px;overflow:hidden;flex-shrink:0}
 .rank-bar{height:100%;border-radius:4px;background:#1a1a2e}
 .rank-val{font-size:12px;font-weight:500;color:var(--color-text-primary);min-width:60px;text-align:right;flex-shrink:0}
+.tw-wrap{position:relative}
+.confirm-box{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:20px 24px;max-width:280px;width:100%;text-align:center}
+.confirm-msg{font-size:13px;color:var(--color-text-primary);margin-bottom:14px;line-height:1.5}
+.confirm-actions{display:flex;gap:8px;justify-content:center}
 .month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px}
 .month-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:14px;cursor:pointer;transition:border-color .15s}
 .month-card:hover{border-color:var(--color-border-secondary)}
@@ -282,17 +282,18 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f2;color:#1a
             <div class="autocomplete-list" id="ac-brg" style="display:none"></div>
           </div>
         </div>
-        <div class="fitem"><label>Jumlah Barang</label><input id="f-qty" type="number" placeholder="1" min="1" value="1"></div>
+        <div class="fitem"><label>Jumlah Barang</label><input id="f-qty" type="number" placeholder="1" min="1" value="1" oninput="calcProfit()"></div>
         <div class="fitem"><label>Harga Won (&#8361;)</label><input id="f-won" type="number" placeholder="0" oninput="autoConvert('won')"></div>
         <div class="fitem"><label>Harga USD ($)</label><input id="f-usd" type="number" placeholder="0" oninput="autoConvert('usd')"></div>
-        <div class="fitem"><label>Harga Rp (modal)</label><input id="f-rp" type="number" placeholder="0" oninput="calcProfit()"></div>
-        <div class="fitem"><label>Harga Jual (Rp)</label><input id="f-jual" type="number" placeholder="0" oninput="calcProfit()"></div>
+        <div class="fitem"><label>Harga Rp Modal (per unit)</label><input id="f-rp" type="number" placeholder="0" oninput="calcProfit()"></div>
+        <div class="fitem"><label>Harga Jual (per unit)</label><input id="f-jual" type="number" placeholder="0" oninput="calcProfit()"></div>
         <div class="fitem"><label>Estimasi Profit</label><input id="f-profit" readonly style="background:var(--color-background-secondary);color:#3B6D11;font-weight:500"></div>
         <div class="fitem"><label>Toko Pembelian</label>
           <select id="f-toko" onchange="toggleManualToko()"><option>Bandara</option><option>Pharmacy</option><option>Direct Store</option><option>Online</option><option>Online OY</option><option>Offline OY</option><option>Coupang</option><option value="__manual__">Lainnya (isi manual)...</option></select>
           <input id="f-toko-manual" placeholder="Nama toko" style="display:none;margin-top:4px;font-size:13px;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)">
         </div>
         <div class="fitem"><label>Status Pembayaran</label><select id="f-pay" onchange="toggleDPField()"><option>BELUM BAYAR</option><option>LUNAS</option><option>DP</option></select></div>
+        <div id="f-qty-hint" style="display:none;font-size:11px;color:#185fa5;background:#e6f1fb;border-radius:6px;padding:5px 10px;margin-top:-4px;grid-column:1/-1"></div>
         <div class="fitem" id="dp-field-wrap" style="display:none"><label>Jumlah DP (Rp)</label><input id="f-dp" type="number" placeholder="0" oninput="calcProfit()"></div>
         <div class="fitem"><label>Bank Transfer</label><select id="f-bank"><option value="">— Pilih bank —</option><option value="BCA">BCA</option><option value="Mandiri">Mandiri</option></select></div>
         <div class="fitem"><label>Status Barang</label><select id="f-sbrg"><option>PENDING</option><option>SUDAH DIBELI</option></select></div>
@@ -478,15 +479,10 @@ function renderStats(){
     <div class="sc"><div class="sc-label">Piutang</div><div class="sc-val" style="font-size:15px;color:#854F0B">${fRp(piutang)}</div><div class="sc-sub">${belum} belum bayar · ${dp} DP</div></div>`;
 }
 
-let pillPay='', pillBrg='';
+let pillPay='',pillBrg='';
 function setPillFilter(type,val){
-  if(type==='pay'){
-    pillPay=val;
-    document.querySelectorAll('#pills-pay .pill').forEach(p=>p.classList.toggle('active',p.dataset.val===val));
-  } else {
-    pillBrg=val;
-    document.querySelectorAll('#pills-brg .pill').forEach(p=>p.classList.toggle('active',p.dataset.val===val));
-  }
+  if(type==='pay'){pillPay=val;document.querySelectorAll('#pills-pay .pill').forEach(p=>p.classList.toggle('active',p.dataset.val===val));}
+  else{pillBrg=val;document.querySelectorAll('#pills-brg .pill').forEach(p=>p.classList.toggle('active',p.dataset.val===val));}
   curPage=1;renderTable();
 }
 
@@ -513,17 +509,14 @@ function renderTable(){
   document.getElementById('page-num').textContent=`${curPage} / ${tot}`;
   const tb=document.getElementById('order-tbody');
   if(!pg.length){tb.innerHTML=`<div class="empty">Tidak ada order</div>`;return;}
-  const tokoOpts=['Bandara','Pharmacy','Direct Store','Online','Online OY','Offline OY','Coupang'];
   tb.innerHTML=pg.map(o=>{
     const tgl=o.tanggal?new Date(o.tanggal+'T00:00:00').toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'2-digit'}):'—';
     const payBg=o.payment==='LUNAS'?'#EAF3DE':o.payment==='DP'?'#E6F1FB':'#FAEEDA';
     const payClr=o.payment==='LUNAS'?'#3B6D11':o.payment==='DP'?'#185FA5':'#854F0B';
     const payBdr=o.payment==='LUNAS'?'#97C459':o.payment==='DP'?'#85B7EB':'#EF9F27';
-    const payLbl=o.payment==='LUNAS'?'Lunas':o.payment==='DP'?'DP':'Belum bayar';
     const brgBg=o.statusBrg==='SUDAH DIBELI'?'#E6F1FB':'#F1EFE8';
     const brgClr=o.statusBrg==='SUDAH DIBELI'?'#185FA5':'#5F5E5A';
     const brgBdr=o.statusBrg==='SUDAH DIBELI'?'#85B7EB':'#B4B2A9';
-    const brgLbl=o.statusBrg==='SUDAH DIBELI'?'Sudah dibeli':'Pending';
     const dpNote=o.payment==='DP'&&o.dp?`<div class="ocard-dp-note">DP ${fRp(o.dp)} · Sisa ${fRp(o.jual-(o.dp||0))}${o.bank?' · '+o.bank:''}</div>`:'';
     return `<div class="ocard">
   <div class="ocard-top">
@@ -573,7 +566,7 @@ function chgPage(d){const f=getFiltered();curPage=Math.max(1,Math.min(Math.max(1
 function askDelete(id,label){
   pendingDelId=id;
   document.getElementById('del-msg').textContent=`Hapus order "${label}"?`;
-  const ov=document.getElementById('del-overlay');ov.style.display='flex';
+  document.getElementById('del-overlay').style.display='flex';
 }
 function cancelDelete(){pendingDelId=null;document.getElementById('del-overlay').style.display='none';}
 function confirmDelete(){
@@ -641,7 +634,18 @@ function closeForm(){
 }
 function calcProfit(){
   const rp=parseFloat(document.getElementById('f-rp').value)||0,jual=parseFloat(document.getElementById('f-jual').value)||0;
-  document.getElementById('f-profit').value=rp&&jual?fRp(jual-rp):'';
+  const qty=parseInt(document.getElementById('f-qty').value)||1;
+  const totalProfit=jual-rp;
+  document.getElementById('f-profit').value=rp&&jual?fRp(totalProfit*qty):'';
+  const hint=document.getElementById('f-qty-hint');
+  if(hint){
+    if(qty>1&&(rp>0||jual>0)){
+      hint.textContent='Total: Modal '+fRp(rp*qty)+' · Jual '+fRp(jual*qty)+' · Profit '+fRp(totalProfit*qty);
+      hint.style.display='block';
+    } else {
+      hint.style.display='none';
+    }
+  }
 }
 function autoConvert(type){
   if(type==='won'){const v=parseFloat(document.getElementById('f-won').value)||0;if(v>0){document.getElementById('f-rp').value=Math.round(v*(kursKRW/1000));calcProfit();}}
@@ -669,10 +673,13 @@ function editOrder(id){
   }
   document.getElementById('f-cust').value=o.cust;
   document.getElementById('f-brg').value=o.barang;
-  document.getElementById('f-qty').value=o.qty||1;
+  const editQty=o.qty||1;
+  document.getElementById('f-qty').value=editQty;
   document.getElementById('f-won').value=o.won||'';
-  document.getElementById('f-usd').value=o.usd||'';document.getElementById('f-rp').value=o.rp;
-  document.getElementById('f-jual').value=o.jual;document.getElementById('f-profit').value=fRp(o.profit);
+  document.getElementById('f-usd').value=o.usd||'';
+  document.getElementById('f-rp').value=Math.round(o.rp/editQty);
+  document.getElementById('f-jual').value=Math.round(o.jual/editQty);
+  document.getElementById('f-profit').value=fRp(o.profit);
   if(tokoOptions.includes(o.toko)){
     document.getElementById('f-toko').value=o.toko;
     document.getElementById('f-toko-manual').style.display='none';document.getElementById('f-toko-manual').value='';
@@ -697,10 +704,12 @@ function saveOrder(){
   const payVal=document.getElementById('f-pay').value;
   const dpVal=payVal==='DP'?(parseFloat(document.getElementById('f-dp').value)||0):0;
   const bankVal=document.getElementById('f-bank').value;
+  const qty=parseInt(document.getElementById('f-qty').value)||1;
+  const rpTotal=rp*qty,jualTotal=jual*qty;
   const d={source:srcVal,cust:document.getElementById('f-cust').value.trim(),
-    barang:document.getElementById('f-brg').value.trim(),qty:parseInt(document.getElementById('f-qty').value)||1,
+    barang:document.getElementById('f-brg').value.trim(),qty,
     won:document.getElementById('f-won').value,usd:document.getElementById('f-usd').value,
-    rp,jual,profit:jual-rp,payment:payVal,dp:dpVal,bank:bankVal,toko:tokoVal,
+    rp:rpTotal,jual:jualTotal,profit:jualTotal-rpTotal,payment:payVal,dp:dpVal,bank:bankVal,toko:tokoVal,
     statusBrg:document.getElementById('f-sbrg').value,resi:document.getElementById('f-resi').value.trim(),
     tanggal:document.getElementById('f-tgl').value};
   if(!d.cust||!d.barang){alert('Nama customer dan barang wajib diisi.');return;}
@@ -1151,7 +1160,6 @@ function deleteAndSync(id){
 buildYearOptions();renderStats();renderTable();fetchKurs();
 loadFromSupabase();
 subscribeRealtime();
-// Always ensure form is closed on initial page load
 document.getElementById('form-panel').classList.remove('open');
 </script>
 
